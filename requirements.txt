@@ -2,3 +2,4 @@ requests
 beautifulsoup4
 pandas
 Flask
+google-generativeai

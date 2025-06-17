@@ -4,5 +4,3 @@ También, crear un entorno virtual para las librerias:
 python -m venv env
 
 $env:GEMINI_API_KEY="TU_API_KEY_AQUI"
-AIzaSyAfT70LpzPUlgqfYUN1MZqONw1FJHGZG8g
-$env:GEMINI_API_KEY="AIzaSyAfT70LpzPUlgqfYUN1MZqONw1FJHGZG8g"

@@ -1,151 +1,113 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Noticias Analizadas de Huánuco</title>
-<style>
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: #f4f4f9;
-    color: #333;
-    margin: 0;
-    padding: 20px;
-}
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 15px;
-}
-header h1 {
-    text-align: center;
-    color: #2c3e50;
-    margin-bottom: 40px;
-    border-bottom: 3px solid #3498db;
-    padding-bottom: 10px;
-}
-.hero-section, .news-card {
-    background-color: #ffffff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    margin-bottom: 40px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.hero-section:hover, .news-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.12);
-}
-.hero-section .title-link, .news-card .title-link {
-    text-decoration: none;
-    color: inherit;
-    display: block;
-    padding: 25px;
-}
-.hero-section h2 {
-    font-size: 2.2em;
-    color: #3498db;
-    margin-top: 0;
-}
-.hero-section p {
-    font-size: 1.1em;
-    line-height: 1.6;
-    color: #555;
-}
-.news-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 25px;
-}
-.news-card {
-    margin-bottom: 0;
-}
-.news-card .title-link {
-    padding: 20px;
-}
-.news-card h3 {
-    font-size: 1.4em;
-    color: #2980b9;
-    margin-top: 0;
-}
-.analysis-box {
-    margin-top: -5px;
-    padding: 15px 25px 20px 25px;
-    background-color: #f9f9f9;
-    border-top: 1px solid #eee;
-    border-radius: 0 0 8px 8px;
-}
-.news-card .analysis-box {
-    margin: 0 20px 20px 20px;
-    padding: 15px;
-}
-.analysis-box h4 {
-    margin-top: 0;
-    margin-bottom: 8px;
-    color: #2c3e50;
-}
-.analysis-box p {
-    font-size: 0.95em !important;
-    color: #555;
-    margin: 0;
-    line-height: 1.5;
-}
-.location-info {
-    font-style: italic;
-    font-size: 0.9em;
-    color: #7f8c8d;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Huánuco al día</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-<div class="container">
-<header>
-<h1>Últimas Noticias de Huánuco (con Análisis IA)</h1>
-</header>
-<main>
-    {% if not hero and not articles %}
-        <p>No hay noticias para mostrar. Ejecuta los scripts de scraping y análisis.</p>
-    {% endif %}
+  <div class="container">
+    <header><h1>Huánuco al día</h1></header>
 
-    {% if hero %}
+    <form class="filters-container" method="GET" action="/">
+      <div class="filter-group">
+        <label for="query">Buscar</label>
+        <input class="search-input" type="text" id="query" name="query" placeholder="Ej: accidente, fiscal..." value="{{ query or '' }}">
+      </div>
+      <div class="filter-group">
+        <label for="category">Categoría</label>
+        <select class="filter-select" id="category" name="category">
+          <option value="">Todas</option>
+          {% for cat in available_categories %}
+            <option value="{{ cat }}" {% if cat == category_filter %}selected{% endif %}>{{ cat }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-buttons">
+        <button type="submit">Filtrar</button>
+        {% if query or category_filter or region_filter %}
+          <a href="/">Limpiar</a>
+        {% endif %}
+      </div>
+    </form>
+
+    <main>
+      {% if not hero %}
+        <p style="text-align: center;">No se encontraron noticias con los filtros aplicados.</p>
+      {% else %}
+        <!-- Noticia Principal -->
         <section class="hero-section">
-            <a class="title-link" href="{{ hero.link }}" target="_blank" rel="noopener noreferrer">
-                <h2>{{ hero.title }}</h2>
-                <p>{{ hero.first_paragraph }}</p>
-            </a>
-            <div class="analysis-box">
-                <h4>Análisis de Veracidad (IA)</h4>
-                <p>{{ hero.analysis_veracity or 'Análisis no disponible.' }}</p>
-                <br>
-                <h4>Ubicación Detectada (IA)</h4>
-                <p class="location-info">
-                    {% set locations = [] %}
-                    {% if hero.analysis_district %}{% set _ = locations.append(hero.analysis_district) %}{% endif %}
-                    {% if hero.analysis_province %}{% set _ = locations.append(hero.analysis_province) %}{% endif %}
-                    {% if hero.analysis_region %}{% set _ = locations.append(hero.analysis_region) %}{% endif %}
-                    {% if hero.analysis_country %}{% set _ = locations.append(hero.analysis_country) %}{% endif %}
-                    {{ locations | join(', ') }}
-                </p>
+          <a href="{{ url_for('noticia_detalle', article_id=hero.id) }}">
+            {% if hero.image_url %}
+              <img src="{{ hero.image_url }}" alt="{{ hero.title }}" class="hero-image">
+            {% endif %}
+          </a>
+          <div class="hero-content">
+            <a href="{{ url_for('noticia_detalle', article_id=hero.id) }}"><h2>{{ hero.title }}</h2></a>
+            <p class="summary-text">{{ hero.analysis_summary or 'Resumen no disponible.' }}</p>
+          </div>
+          <div class="analysis-section">
+            <div class="analysis-item">
+              <strong>Veracidad:</strong> <span>{{ hero.analysis_veracity_score or 'N/A' }}%</span>
+              {% if hero.analysis_veracity_reason and 'no proporcionada' not in hero.analysis_veracity_reason %}
+                <p class="reasoning">{{ hero.analysis_veracity_reason }}</p>
+              {% endif %}
             </div>
+            <div class="analysis-item">
+              <strong>Interés Regional:</strong> <span>{{ hero.analysis_interest_score or 'N/A' }}%</span>
+              {% if hero.analysis_regional_interest_reason and 'no proporcionada' not in hero.analysis_regional_interest_reason %}
+                <p class="reasoning">{{ hero.analysis_regional_interest_reason }}</p>
+              {% endif %}
+            </div>
+            <div class="analysis-item">
+              <strong>Ubicación:</strong>
+              <span>{{ hero.analysis_province or 'Desconocida' }}{% if hero.analysis_district %}, {{ hero.analysis_district }}{% endif %}</span>
+            </div>
+          </div>
         </section>
-    {% endif %}
 
-    {% if articles %}
-        <section class="news-grid">
+        <!-- Noticias Secundarias -->
+        {% if articles %}
+          <section class="news-grid">
             {% for article in articles %}
-                <article class="news-card">
-                    <a class="title-link" href="{{ article.link }}" target="_blank" rel="noopener noreferrer">
-                        <h3>{{ article.title }}</h3>
-                    </a>
-                    <div class="analysis-box">
-                        <h4>Análisis (IA)</h4>
-                        <p>{{ article.analysis_veracity or 'Análisis no disponible.' }}</p>
-                    </div>
-                </article>
+              <article class="news-card">
+                <a href="{{ url_for('noticia_detalle', article_id=article.id) }}">
+                  {% if article.image_url %}
+                    <img src="{{ article.image_url }}" alt="{{ article.title }}" class="card-image">
+                  {% else %}
+                    <div style="height: 200px; background-color: #e9ebee;"></div>
+                  {% endif %}
+                </a>
+                <div class="content-box">
+                  <a href="{{ url_for('noticia_detalle', article_id=article.id) }}">
+                    <h3>{{ article.title }}</h3>
+                  </a>
+                  <p class="summary-text">{{ article.analysis_summary | truncate(200) or 'Resumen no disponible.' }}</p>
+                </div>
+                <div class="analysis-section">
+                  <div class="analysis-item">
+                    <strong>Veracidad:</strong> <span>{{ article.analysis_veracity_score or 'N/A' }}%</span>
+                    {% if article.analysis_veracity_reason and 'no proporcionada' not in article.analysis_veracity_reason %}
+                      <p class="reasoning">{{ article.analysis_veracity_reason | truncate(100) }}</p>
+                    {% endif %}
+                  </div>
+                  <div class="analysis-item">
+                    <strong>Interés Regional:</strong> <span>{{ article.analysis_interest_score or 'N/A' }}%</span>
+                    {% if article.analysis_regional_interest_reason and 'no proporcionada' not in article.analysis_regional_interest_reason %}
+                      <p class="reasoning">{{ article.analysis_regional_interest_reason | truncate(100) }}</p>
+                    {% endif %}
+                  </div>
+                  <div class="analysis-item">
+                    <strong>Ubicación:</strong>
+                    <span>{{ article.analysis_province or 'Desconocida' }}{% if article.analysis_district %}, {{ article.analysis_district }}{% endif %}</span>
+                  </div>
+                </div>
+              </article>
             {% endfor %}
-        </section>
-    {% endif %}
-</main>
-</div>
+          </section>
+        {% endif %}
+      {% endif %}
+    </main>
+  </div>
 </body>
 </html>

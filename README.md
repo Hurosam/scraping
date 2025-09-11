@@ -5,8 +5,6 @@ python -m venv env
 
 $env:GEMINI_API_KEY="TU_API_KEY_AQUI"
 
-$env:GEMINI_API_KEY="AIzaSyAcVfXgVt06gDgp6OoNoWMxlLbJFf9M1zQ"
-
 # Observatorio Digital de Noticias de Huánuco
 
 Este es un proyecto que utiliza Python, Flask y la API de Gemini de Google para:

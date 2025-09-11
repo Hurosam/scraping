@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Analítico{% endblock %}
+
+{% block content %}
+<header class="text-center mb-8">
+    <h1 class="text-4xl font-extrabold text-slate-800 dark:text-slate-100">Dashboard Analítico</h1>
+    <p class="text-slate-500 dark:text-slate-400 mt-2">Vista integral del panorama informativo en Huánuco</p>
+</header>
+
+<!-- ✅ CAMBIO: Nueva barra de filtros combinada -->
+<div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-md mb-6">
+    <div class="flex flex-wrap gap-x-6 gap-y-4 items-center">
+        <!-- Atajos de Rango de Fecha -->
+        <div class="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-4">
+            <button class="time-range-btn px-3 py-1.5 rounded-md text-sm font-semibold transition" data-days="7">7D</button>
+            <button class="time-range-btn px-3 py-1.5 rounded-md text-sm font-semibold transition" data-days="30">30D</button>
+            <button class="time-range-btn px-3 py-1.5 rounded-md text-sm font-semibold transition" data-days="365">1A</button>
+            <button class="time-range-btn px-3 py-1.5 rounded-md text-sm font-semibold transition" data-days="">Todo</button>
+        </div>
+
+        <!-- Selectores de Rango de Fecha Personalizado -->
+        <div class="flex items-center gap-2">
+            <input type="date" id="startDate" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 transition">
+            <span class="text-slate-400">-</span>
+            <input type="date" id="endDate" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 transition">
+        </div>
+        
+        <!-- Otros Filtros (empujados a la derecha) -->
+        <div class="flex items-center gap-4 ml-auto">
+             <select id="sourceFilter" class="px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 transition">
+                <option value="">Todas las fuentes</option>
+                <option value="diario_correo">Diario Correo</option>
+                <option value="tu_diario_huanuco">Tu Diario Huánuco</option>
+            </select>
+            <div class="flex items-center">
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="showAllSwitch" value="true" class="sr-only peer">
+                  <div class="w-11 h-6 bg-slate-200 dark:bg-slate-600 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+                <label for="showAllSwitch" class="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">Mostrar todas</label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contenedor principal del Dashboard (el resto del HTML no ha cambiado) -->
+<div id="dashboard-container" class="space-y-6" style="display: none;">
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="stat-card bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-2xl shadow-lg"><div><p class="text-blue-100 text-sm">Total Noticias</p><p id="total-news" class="text-3xl font-bold">--</p></div></div>
+        <div class="stat-card bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-2xl shadow-lg"><div><p class="text-green-100 text-sm">Índice de Calidad</p><p id="quality-index" class="text-3xl font-bold">--%</p></div></div>
+        <div class="stat-card bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-2xl shadow-lg"><div><p class="text-purple-100 text-sm">Diversidad Fuentes</p><p id="source-diversity" class="text-3xl font-bold">--</p></div></div>
+        <div class="stat-card bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-2xl shadow-lg"><div><p class="text-orange-100 text-sm">Cobertura Geográfica</p><p id="geo-coverage" class="text-2xl font-bold">-- prov.</p></div></div>
+    </section>
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-md"><h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4">Timeline de Noticias</h2><div class="relative h-64"><canvas id="timelineChart"></canvas></div></div>
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-md"><h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4">Distribución de Scores Promedio</h2><div class="relative h-64"><canvas id="scoresChart"></canvas></div></div>
+    </section>
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-md"><h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4">Noticias por Categoría</h2><div class="relative h-64"><canvas id="categoryChart"></canvas></div></div>
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-md"><h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4">Análisis por Fuente</h2><div id="sourceComparison" class="space-y-3"></div></div>
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-md"><h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4">Cobertura por Provincia</h2><div id="topLocationsList" class="space-y-2"></div></div>
+    </section>
+    <section class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-md">
+        <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4">Palabras Clave Populares</h2>
+        <div id="keywordTrends" class="flex flex-wrap gap-2"></div>
+    </section>
+</div>
+
+<div id="loading-indicator" class="text-center p-12">
+    <i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i>
+    <p class="mt-4 text-slate-500 dark:text-slate-400">Cargando dashboard avanzado...</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- ✅ CAMBIO: Llamamos a nuestro nuevo y único archivo JavaScript -->
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

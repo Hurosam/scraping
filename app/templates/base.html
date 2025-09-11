@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Huánuco al Día{% endblock %} - Observatorio de Noticias</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Montserrat', 'sans-serif'], } } } }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css">
+    
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Montserrat', sans-serif; }
+        .noUi-connect { background: #3b82f6; }
+    </style>
+
+    {% block styles %}{% endblock %}
+</head>
+<body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
+
+    <header class="bg-white dark:bg-slate-800 shadow-md sticky top-0 z-10">
+        <nav class="container mx-auto max-w-7xl px-4 flex justify-between items-center py-3">
+            <a href="{{ url_for('main.index') }}" class="text-xl font-bold text-blue-600 dark:text-blue-400">
+                <i class="fas fa-newspaper"></i>
+                Huánuco al Día
+            </a>
+            <div class="flex items-center gap-6">
+                <a href="{{ url_for('main.dashboard') }}" class="hidden sm:flex text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition items-center gap-2">
+                    <i class="fas fa-chart-pie"></i>
+                    Dashboard
+                </a>
+                <a href="{{ url_for('main.mapa') }}" class="hidden sm:flex text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition items-center gap-2">
+                    <i class="fas fa-map-location-dot"></i>
+                    Mapa
+                </a>
+
+                <!-- ✅ CAMBIO: Lógica de autenticación en el header -->
+                <div class="flex items-center gap-2">
+                    {% if current_user.is_authenticated %}
+                        <span class="text-sm text-slate-500 dark:text-slate-400 hidden md:inline">Hola, {{ current_user.email }}</span>
+                        <a href="{{ url_for('auth.logout') }}" class="px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-md transition">
+                            Cerrar Sesión
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition">
+                            Iniciar Sesión
+                        </a>
+                        <a href="{{ url_for('auth.register') }}" class="px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition">
+                            Registrarse
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <button id="theme-toggle" type="button" class="fixed bottom-5 right-5 z-20 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 focus:outline-none focus:ring-4 focus:ring-slate-200 dark:focus:ring-slate-700 rounded-lg text-sm p-2.5">
+        <i class="fas fa-moon text-lg hidden dark:block"></i>
+        <i class="fas fa-sun text-lg dark:hidden"></i>
+        <span class="sr-only">Cambiar tema</span>
+    </button>
+
+    <div class="container mx-auto max-w-7xl px-4 py-8">
+        <!-- ✅ CAMBIO: Sección para mostrar los mensajes flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-6 space-y-2">
+                {% for category, message in messages %}
+                    {% set bg_color = 'bg-blue-100 dark:bg-blue-900' %}
+                    {% set border_color = 'border-blue-500' %}
+                    {% set text_color = 'text-blue-800 dark:text-blue-200' %}
+                    {% if category == 'success' %}
+                        {% set bg_color = 'bg-green-100 dark:bg-green-900' %}
+                        {% set border_color = 'border-green-500' %}
+                        {% set text_color = 'text-green-800 dark:text-green-200' %}
+                    {% elif category == 'danger' %}
+                        {% set bg_color = 'bg-red-100 dark:bg-red-900' %}
+                        {% set border_color = 'border-red-500' %}
+                        {% set text_color = 'text-red-800 dark:text-red-200' %}
+                    {% endif %}
+                    <div class="{{ bg_color }} {{ border_color }} {{ text_color }} border-l-4 p-4 rounded-r-lg" role="alert">
+                        <p class="font-bold">{{ message }}</p>
+                    </div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        themeToggleBtn.addEventListener('click', function() {
+            document.documentElement.classList.toggle('dark');
+            if (document.documentElement.classList.contains('dark')) {
+                localStorage.setItem('theme', 'dark');
+            } else {
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+
+</body>
+</html>

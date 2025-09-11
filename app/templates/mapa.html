@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Mapa de Noticias por Provincia{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/map.css') }}">
+{% endblock %}
+
+{% block content %}
+<header class="text-center mb-6">
+    <h1 class="text-4xl font-extrabold text-slate-800 dark:text-slate-100">Mapa de Coropletas de Noticias</h1>
+    <p class="text-slate-500 dark:text-slate-400 mt-2">Las provincias se colorean según la cantidad de noticias. Pasa el mouse para resaltar y haz clic para ver detalles.</p>
+</header>
+
+<div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg overflow-hidden p-2">
+    <div id="map-loader" class="flex items-center justify-center" style="height: 75vh;">
+        <div class="text-center">
+            <i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i>
+            <p class="mt-4 text-slate-500 dark:text-slate-400">Cargando datos geoespaciales...</p>
+        </div>
+    </div>
+    <div id="map" class="rounded-xl" style="height: 75vh; display: none;"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    let map = null;
+    let currentTileLayer = null;
+    let geojsonLayer = null;
+
+    const lightTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' });
+    const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO' });
+
+    function updateMapTheme() {
+        if (!map) return;
+        if (currentTileLayer) map.removeLayer(currentTileLayer);
+        currentTileLayer = document.documentElement.classList.contains('dark') ? darkTiles : lightTiles;
+        currentTileLayer.addTo(map);
+    }
+    document.getElementById('theme-toggle')?.addEventListener('click', () => setTimeout(updateMapTheme, 100));
+
+    function getColor(newsCount) {
+        return newsCount > 10 ? '#800026' :
+               newsCount > 5  ? '#BD0026' :
+               newsCount > 2  ? '#E31A1C' :
+               newsCount > 1  ? '#FC4E2A' :
+               newsCount > 0  ? '#FD8D3C' :
+                                '#FFEDA0';
+    }
+
+    // ✅ CAMBIO REALIZADO: La función de estilo ahora diferencia entre 0 y >0 noticias.
+    function style(feature) {
+        const newsCount = feature.properties.NOTICIAS_COUNT;
+        if (newsCount > 0) {
+            // Estilo para provincias con noticias
+            return {
+                fillColor: getColor(newsCount),
+                weight: 2,
+                opacity: 1,
+                color: 'white',
+                dashArray: '3',
+                fillOpacity: 0.7
+            };
+        } else {
+            // Estilo para provincias SIN noticias
+            return {
+                fillColor: '#6B7280', // Un color gris neutral
+                weight: 1,
+                opacity: 1,
+                color: '#4B5563',
+                dashArray: '3',
+                fillOpacity: 0.2 // Muy transparente para que se vea "apagado"
+            };
+        }
+    }
+
+    function highlightFeature(e) {
+        const layer = e.target;
+        layer.setStyle({
+            weight: 5,
+            color: '#FBBF24',
+            dashArray: '',
+            fillOpacity: 0.8
+        });
+        layer.bringToFront();
+    }
+    
+    function resetHighlight(e) {
+        if (geojsonLayer) {
+            geojsonLayer.resetStyle(e.target);
+        }
+    }
+
+    function onEachFeature(feature, layer) {
+        layer.on({
+            mouseover: highlightFeature,
+            mouseout: resetHighlight,
+        });
+        if (feature.properties && feature.properties.NAME) {
+            const count = feature.properties.NOTICIAS_COUNT || 0;
+            const popupContent = `
+                <div class="p-1">
+                    <h3 class="font-bold text-lg">${feature.properties.NAME}</h3>
+                    <p class="text-md">${count} noticia${count !== 1 ? 's' : ''} encontrada${count !== 1 ? 's' : ''}.</p>
+                </div>
+            `;
+            layer.bindPopup(popupContent);
+        }
+    }
+    
+    async function initializeMap() {
+        try {
+            const response = await fetch('/api/map_geojson');
+            if (!response.ok) throw new Error(`Error del servidor: ${response.status}`);
+            const geojsonData = await response.json();
+
+            const mapContainer = document.getElementById('map');
+            const loader = document.getElementById('map-loader');
+            
+            loader.style.display = 'none';
+            mapContainer.style.display = 'block';
+
+            map = L.map('map').setView([-9.93, -76.24], 9);
+            updateMapTheme();
+
+            geojsonLayer = L.geoJSON(geojsonData, {
+                style: style,
+                onEachFeature: onEachFeature
+            }).addTo(map);
+            
+            if (geojsonLayer.getBounds().isValid()) {
+                 map.fitBounds(geojsonLayer.getBounds().pad(0.1));
+            }
+
+            const legend = L.control({position: 'bottomright'});
+            legend.onAdd = function (map) {
+                const div = L.DomUtil.create('div', 'info legend');
+                const grades = [0, 1, 2, 5, 10];
+                div.innerHTML += '<h4>Noticias</h4>';
+                for (let i = 0; i < grades.length; i++) {
+                    div.innerHTML +=
+                        '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+                        grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+                }
+                return div;
+            };
+            legend.addTo(map);
+
+        } catch (error) {
+            console.error('Error al inicializar el mapa:', error);
+            document.getElementById('map-loader').innerHTML = '<div class="text-center text-red-500 p-8">Error al cargar los datos del mapa. Por favor, recarga la página.</div>';
+        }
+    }
+
+    initializeMap();
+});
+</script>
+{% endblock %}

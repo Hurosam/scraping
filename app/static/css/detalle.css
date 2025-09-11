@@ -1,0 +1,26 @@
+/*
+    Este archivo está mayormente vacío porque Tailwind CSS
+    maneja casi todos los estilos directamente en el HTML.
+    Lo mantenemos para añadir pequeñas personalizaciones
+    o estilos complejos si fueran necesarios en el futuro.
+*/
+
+.analysis-card {
+    @apply bg-white p-6 rounded-xl border border-slate-200;
+}
+
+.info-card {
+    @apply bg-white p-4 rounded-lg border border-slate-200 flex items-start gap-3;
+}
+
+/*
+    Tailwind maneja la mayoría de los estilos de tipografía,
+    pero si quisiéramos personalizar los párrafos del contenido
+    lo haríamos aquí. 'prose' de Tailwind ya hace un gran trabajo.
+*/
+.prose p {
+    margin-bottom: 1.25em;
+}
+.prose a {
+    @apply text-blue-600 hover:underline;
+}

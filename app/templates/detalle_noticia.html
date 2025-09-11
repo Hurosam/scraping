@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }}{% endblock %}
+
+{% block content %}
+<nav class="mb-6">
+    <a href="/" class="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-semibold transition">
+        <i class="fas fa-arrow-left"></i>
+        Volver a todas las noticias
+    </a>
+</nav>
+
+<article class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg overflow-hidden">
+    <!-- Imagen Principal -->
+    {% if article.image_url %}
+    <!-- ✅ CAMBIO: Se reemplazó 'object-cover' por 'object-contain' y se añadió un fondo sutil -->
+    <div class="w-full h-64 md:h-96 bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+        <img src="{{ article.image_url }}" alt="{{ article.title }}" class="w-full h-full object-contain">
+    </div>
+    {% endif %}
+
+    <!-- Encabezado del Artículo -->
+    <header class="p-6 md:p-10 border-b border-slate-200 dark:border-slate-700">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-800 dark:text-slate-100 mb-4 leading-tight">{{ article.title }}</h1>
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-slate-500 dark:text-slate-400">
+            <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full">
+                <i class="far fa-calendar-alt text-blue-500"></i>
+                <span>Publicado: <strong>{{ article.published_at | absolute_date }}</strong></span>
+            </div>
+            <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full">
+                <i class="fas fa-cloud-download-alt text-blue-500"></i>
+                <span>Capturado: <strong>{{ article.scraped_at | absolute_date }}</strong></span>
+            </div>
+            <div class="font-bold text-blue-600 dark:text-blue-400">
+                <i class="fas fa-newspaper mr-1"></i>
+                {{ article.source_name or 'Fuente desconocida' }}
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido del Artículo -->
+    <section class="prose dark:prose-invert max-w-none p-6 md:p-10 text-slate-700 dark:text-slate-300 text-lg leading-relaxed">
+        {% if article.excerpt %}
+            <p class="text-xl italic text-slate-500 dark:text-slate-400 border-l-4 border-blue-500 pl-4">"{{ article.excerpt }}"</p>
+        {% endif %}
+
+        {% for paragraph in (article.content or '').split('\n') %}
+            {% if paragraph.strip() %}
+                <p>{{ paragraph }}</p>
+            {% endif %}
+        {% endfor %}
+    </section>
+
+    <!-- Sección de Análisis por IA -->
+    {% if article.summary %}
+    <section class="bg-slate-50 dark:bg-slate-900/50 p-6 md:p-10 border-t border-slate-200 dark:border-slate-700">
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-3">
+            <i class="fas fa-robot text-blue-500"></i>
+            Análisis por IA
+        </h2>
+
+        <div class="mb-8">
+            <h3 class="font-semibold text-lg text-slate-700 dark:text-slate-300 mb-2">Resumen Inteligente</h3>
+            <p class="text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700">{{ article.summary }}</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="analysis-card bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
+                <div class="flex items-center text-green-600 dark:text-green-400"><i class="fas fa-check-circle text-xl mr-3"></i><h4 class="font-bold text-lg">Veracidad Estimada</h4></div>
+                <div class="text-5xl font-extrabold text-green-600 dark:text-green-400 my-4">{{ article.veracity_score or 'N/A' }}<span class="text-2xl">%</span></div>
+                <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width: {{ article.veracity_score or 0 }}%"></div></div>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-4">{{ article.veracity_reasoning }}</p>
+            </div>
+            <div class="analysis-card bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
+                <div class="flex items-center text-yellow-600 dark:text-yellow-400"><i class="fas fa-users text-xl mr-3"></i><h4 class="font-bold text-lg">Interés Popular</h4></div>
+                <div class="text-5xl font-extrabold text-yellow-600 dark:text-yellow-400 my-4">{{ article.local_relevance_score or 'N/A' }}<span class="text-2xl">%</span></div>
+                <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5"><div class="bg-yellow-500 h-2.5 rounded-full" style="width: {{ article.local_relevance_score or 0 }}%"></div></div>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-4">{{ article.relevance_reasoning }}</p>
+            </div>
+            <div class="analysis-card bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
+                <div class="flex items-center text-blue-600 dark:text-blue-400"><i class="fas fa-landmark text-xl mr-3"></i><h4 class="font-bold text-lg">Impacto Cívico</h4></div>
+                <div class="text-5xl font-extrabold text-blue-600 dark:text-blue-400 my-4">{{ article.civic_impact_score or 'N/A' }}<span class="text-2xl">%</span></div>
+                <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5"><div class="bg-blue-500 h-2.5 rounded-full" style="width: {{ article.civic_impact_score or 0 }}%"></div></div>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-4">{{ article.civic_impact_reasoning }}</p>
+            </div>
+        </div>
+    </section>
+    {% else %}
+    <section class="bg-slate-50 dark:bg-slate-900/50 p-6 md:p-10 border-t border-slate-200 dark:border-slate-700 text-center">
+        <i class="fas fa-robot text-4xl text-slate-400 mb-4"></i>
+        <h3 class="text-xl font-bold text-slate-600 dark:text-slate-300">Análisis en Proceso</h3>
+        <p class="text-slate-500 dark:text-slate-400">La inteligencia artificial está trabajando en esta noticia. Vuelve a visitarla más tarde para ver el análisis completo.</p>
+    </section>
+    {% endif %}
+
+    <footer class="p-6 text-center">
+        <a href="{{ article.link }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 shadow transition">
+            <i class="fas fa-external-link-alt"></i>
+            Ver Noticia Original
+        </a>
+    </footer>
+</article>
+{% endblock %}

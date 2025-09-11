@@ -1,0 +1,35 @@
+/* --- START OF FILE app/static/css/map.css --- */
+
+/* ✅ NUEVO ARCHIVO */
+
+/* Estilos para la leyenda del mapa interactivo */
+.legend {
+    padding: 6px 10px;
+    font: 14px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    line-height: 20px;
+    color: #555;
+}
+
+.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.8;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Estilos para el modo oscuro de la leyenda */
+.dark .legend {
+    background: rgba(30, 41, 59, 0.85); /* bg-slate-800 con opacidad */
+    color: #cbd5e1; /* text-slate-300 */
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+}
+
+.dark .legend i {
+    border: 1px solid rgba(255,255,255,0.1);
+}

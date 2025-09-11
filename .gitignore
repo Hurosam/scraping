@@ -1,0 +1,29 @@
+# Entornos virtuales
+env/
+venv/
+*.venv
+
+# Archivos de caché de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Carpetas de instalación de paquetes
+*.egg-info/
+dist/
+build/
+
+# Bases de datos locales
+*.db
+*.sqlite3
+
+# Archivos de configuración locales o secretos (si los tuvieras)
+instance/
+.env
+
+# Archivos del editor (ej: VS Code)
+.vscode/
+
+# Caché de imágenes del proxy que creamos
+app/cache/

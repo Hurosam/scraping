@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Sistema Avanzado de Búsqueda{% endblock %}
+
+{% block styles %}
+    <!-- Aquí podríamos poner estilos específicos del index si los tuviéramos -->
+{% endblock %}
+
+{% block content %}
+<!-- Búsqueda Inteligente Principal -->
+<div class="mb-8">
+    <div class="bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg p-6 rounded-3xl shadow-2xl border border-white/20 dark:border-slate-700/20">
+        <div class="flex items-center gap-4 mb-4">
+            <div class="flex-1 relative">
+                <i class="fas fa-brain absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-500 text-lg"></i>
+                <input 
+                    type="text" 
+                    id="smart-search"
+                    class="w-full pl-12 pr-16 py-4 rounded-2xl text-lg font-medium text-slate-800 dark:text-slate-200 placeholder-slate-500 bg-slate-100 dark:bg-slate-900/50 border-2 border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition"
+                    placeholder="Búsqueda inteligente..."
+                >
+                <div class="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                    <span class="text-xs text-slate-400 bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded-full">IA</span>
+                </div>
+                
+                <div id="smart-suggestions" class="absolute w-full mt-2 rounded-2xl shadow-2xl border border-slate-200/50 dark:border-slate-600/50 hidden max-h-80 overflow-y-auto z-30 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md">
+                    <!-- Se llenan dinámicamente -->
+                </div>
+            </div>
+            
+            <button id="advanced-toggle" class="px-6 py-4 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white rounded-2xl transition font-medium">
+                <i class="fas fa-sliders-h mr-2"></i>
+                Avanzado
+            </button>
+        </div>
+        
+        <div id="active-filters" class="flex flex-wrap gap-2 mb-4 hidden">
+            <!-- Se llenan dinámicamente -->
+        </div>
+    </div>
+</div>
+
+<!-- Panel de Filtros Avanzados -->
+<div id="advanced-filters" class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out mb-8">
+    <div class="bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 dark:border-slate-700/20 overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-bold">Filtros Avanzados</h2>
+                    <p class="text-blue-100 text-sm">Personaliza tu búsqueda con precisión</p>
+                </div>
+                <button id="reset-filters" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition text-sm">
+                    <i class="fas fa-redo-alt mr-2"></i>Limpiar
+                </button>
+            </div>
+        </div>
+        
+        <div class="p-6 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"><i class="fas fa-tags text-blue-500 mr-2"></i>Categoría</label>
+                    <select id="category-filter" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500"></select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"><i class="fas fa-newspaper text-purple-500 mr-2"></i>Fuente</label>
+                    <select id="source-filter" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-purple-500"></select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"><i class="fas fa-map-marker-alt text-cyan-500 mr-2"></i>Provincia</label>
+                    <select id="province-filter" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-cyan-500"></select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                 <div>
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"><i class="fas fa-sort text-green-500 mr-2"></i>Ordenar por</label>
+                    <select id="sort-filter" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-green-500">
+                        <option value="published_at">Más recientes</option>
+                        <option value="veracity_score">Mayor veracidad</option>
+                        <option value="civic_impact_score">Mayor impacto cívico</option>
+                        <option value="local_relevance_score">Mayor relevancia</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"><i class="fas fa-calendar-alt text-pink-500 mr-2"></i>Período personalizado</label>
+                    <div class="flex gap-3">
+                        <input type="date" id="date-start" class="flex-1 px-3 py-1.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg">
+                        <input type="date" id="date-end" class="flex-1 px-3 py-1.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <label class="flex items-center cursor-pointer">
+                    <input type="checkbox" id="only-analyzed" class="sr-only peer" checked>
+                    <div class="relative w-11 h-6 bg-slate-200 dark:bg-slate-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <span class="ml-3 text-sm font-medium text-slate-600 dark:text-slate-400">Mostrar solo analizadas</span>
+                </label>
+                <button id="apply-filters" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl transition font-medium">
+                    <i class="fas fa-search mr-2"></i>Aplicar Filtros
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estadísticas y controles de vista -->
+<div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+    <div id="results-counter" class="bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg px-6 py-3 rounded-2xl shadow-lg">
+        <span class="text-slate-600 dark:text-slate-400">Cargando...</span>
+    </div>
+    <div class="bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg rounded-2xl p-1 shadow-lg">
+        <button id="grid-view" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm transition"><i class="fas fa-th"></i></button>
+        <button id="list-view" class="px-4 py-2 text-slate-600 dark:text-slate-300 rounded-xl text-sm transition"><i class="fas fa-list"></i></button>
+    </div>
+</div>
+
+<!-- Contenedor de noticias -->
+<main id="news-container" class="animate-fade-in">
+    <div class="text-center p-16 bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-3xl shadow-xl">
+        <div class="inline-block animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+        <p class="text-slate-600 dark:text-slate-400 text-lg">Cargando sistema inteligente...</p>
+    </div>
+</main>
+
+<!-- Paginación -->
+<div id="pagination-container" class="mt-12 hidden">
+    <div class="bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg p-4 rounded-3xl shadow-xl">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <span class="text-sm text-slate-600 dark:text-slate-400">Mostrar:</span>
+                <select id="items-per-page" class="px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-sm">
+                    <option value="12">12 por página</option>
+                    <option value="24" selected>24 por página</option>
+                    <option value="48">48 por página</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2" id="pagination-controls">
+                <!-- Se llena dinámicamente -->
+            </div>
+            <div class="text-sm text-slate-600 dark:text-slate-400">
+                Mostrando <span id="showing-range">1-12</span> de <span id="total-items">0</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+{% endblock %}

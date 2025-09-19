@@ -1,1 +1,1 @@
-web: flask db upgrade && gunicorn run:app
+flask db upgrade && python -m gunicorn run:app
